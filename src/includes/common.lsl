@@ -223,3 +223,21 @@ string SetDSMeta(list lTmp){
 list GetMetaList(key kID){
     return llParseStringKeepNulls(GetDSMeta(kID), [":"],[]);
 }
+
+
+key decodeAvatarInput(string sInput, string sExtra)
+{
+    if(IsLikelyAvatarID(sInput))
+    {
+        return (key)sInput;
+    }else {
+        list lParts = llParseString2List(sInput, ["/"],[]);
+        if(llList2String(lParts,0) == "secondlife:")
+        {
+            return (key)llList2String(lParts,3);
+        }else {
+            UpdateDSRequest(NULL_KEY, llRequestUserKey(sInput), SetDSMeta(["decodeAvatar", sInput, sExtra]));
+            return NULL_KEY;
+        }
+    }
+}
