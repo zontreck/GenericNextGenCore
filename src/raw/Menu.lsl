@@ -47,7 +47,7 @@ Main(key kID, integer level)
 {
     list lMenu = ["Access", "Help..", Checkbox(g_iLocked, "Locked")] + g_lPlugins;
     list lMenuHelper = ["Set or remove owners", "Core help"];
-    string sText = "Welcome!\n\nDHB Replacement Scripts by " + SLURL ("5556d037-3990-4204-a949-73e56cd3cb06")+"\nYour Access Level is: " + ToLevelString(level)+"\n\n";
+    string sText = "Welcome!\nYour Access Level is: " + ToLevelString(level)+"\n\n";
 
     Menu(kID, sText, lMenu, "menu~Main", SetDSMeta([level]), lMenuHelper);
 }

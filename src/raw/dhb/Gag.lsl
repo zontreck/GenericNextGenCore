@@ -1,6 +1,6 @@
 #include "src/includes/common.lsl"
 
-string PLUGIN_NAME = "Example";
+string PLUGIN_NAME = "Gag";
 
 // Link Commands
 integer     LINK_MENU_DISPLAY = 300;
@@ -46,18 +46,43 @@ call_menu(integer id, key kAv)
 
     llMessageLinked(LINK_SET, 0, llList2Json(JSON_OBJECT, ["cmd", "check_mode", "callback", llList2Json(JSON_OBJECT, ["script", llGetScriptName(), "id", id])]), kAv);
 }
+integer g_iGagged;
+integer g_iGagLevel;
+
+integer g_iGagPrim;
 
 Main(key kID, integer iAuth)
 {
-    list lMenu = ["main.."];
+    list lMenu = ["main..", Checkbox(g_iGagged, "Gag")];
     list lHelper = [];
-    string sText =  "Example Menu";
+    string sText =  "Gag Menu";
 
 
-    Menu(kID, sText, lMenu, "menu~example", SetDSMeta([iAuth]), lHelper);
+    Menu(kID, sText, lMenu, "menu~gag", SetDSMeta([iAuth]), lHelper);
 }
 default
 {
+    state_entry()
+    {
+        integer i = 0;
+        integer end = llGetNumberOfPrims();
+
+        integer iHasGag = 0;
+        for(i=LINK_ROOT; i<=end;i++)
+        {
+            string sDesc = llList2String(llGetLinkPrimitiveParams(i, [PRIM_DESC]),0);
+            if(sDesc == "gag")
+            {
+                g_iGagPrim = i;
+                iHasGag=1;
+            }
+        }
+
+        if(!iHasGag)
+        {
+            llOwnerSay(llGetScriptName()+" has been removed because the required prim could not be found. Please ensure a prim with the description of 'gag' is present.");
+        }
+    }
 
     link_message(integer s,integer n,string m,key i)
     {
@@ -90,7 +115,25 @@ default
                 }
                 else llRegionSayTo(i,0,"Access Denied");
                 
-            } 
+            }  else if(llJsonGetValue(m,["cmd"]) == "read_setting_back")
+            {
+                string sSetting = llJsonGetValue(m,["setting"]);
+                string sValue = llJsonGetValue(m,["value"]);
+
+                switch(sSetting)
+                {
+                    case "gag_gagged":
+                    {
+                        g_iGagged = (integer)sValue;
+                        break;
+                    }
+                    case "gag_level":
+                    {
+                        g_iGagLevel = (integer)sValue;
+                        break;
+                    }
+                }
+            }
         }else if(n == LINK_MENU_CHANNEL)
         {
             if(i == "ident")
@@ -119,7 +162,7 @@ default
                 }
                 switch(sIdent)
                 {
-                    case "menu~example":
+                    case "menu~gag":
                     {
                         iMenu = 1;
                         switch(sReply)
@@ -143,6 +186,8 @@ default
         } else if(n == LM_SETTINGS_READY)
         {
             // Load Settings Here
+            readSetting("gag_gagged", "0");
+            readSetting("gag_level", "0");
         }
     }
 }

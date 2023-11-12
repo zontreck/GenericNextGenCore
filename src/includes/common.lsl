@@ -241,3 +241,16 @@ key decodeAvatarInput(string sInput, string sExtra)
         }
     }
 }
+
+
+
+list numberRange(integer start, integer end)
+{
+    list ret = [];
+    for(start = start; start<end; start++)
+    {
+        ret += [(string)start];
+    }
+
+    return ret;
+}

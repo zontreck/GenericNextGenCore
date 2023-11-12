@@ -4,10 +4,27 @@ Scripts Installation Instructions
 
 Remove all DHB Scripts, minus the BoSH script.
 
-1. Install `Access [AC]`
-3. Install `Dialog Module [AC]`
-4. Install `Leash [AC]`
-5. Install `Menu [AC]`
-6. Install `Settings Engine [AC]`
+
+Required Scripts
+==========
+
+1. Install `Access.lsl` => `Access [AC]`
+2. Install `Dialog Module.lsl` => `Dialog Module [AC]`
+3. Install `Menu.lsl` => `Menu [AC]`
+4. Install `Settings.lsl` => `Settings Engine [AC]`
 
 Any further files should be added based on features desired, and product type.
+
+
+Optional Features
+========
+
+Generic
+---
+
+1. Install `Leash.lsl` => `Leash [AC]`
+
+DHB
+---
+
+1. Install `Gag.lsl` => `Gag [AC]`
