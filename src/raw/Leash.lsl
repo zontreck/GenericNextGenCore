@@ -69,16 +69,25 @@ call_menu(integer id, key kAv)
 
 Main(key kID, integer iAuth)
 {
-    list lMenu = ["main..", "Length", Checkbox(g_iTurn, "Turn2Leasher"), "Post", "Tools..", "Color"];
-    if(kID != llGetOwner())
+    list lMenu = ["main..", "Length", Checkbox(g_iTurn, "Turn2Leasher"), "Tools..", "Color"];
+    if(g_kLeashedTo)
     {
-        if(g_kLeashedTo)
-            lMenu += ["Grab Leash"];
-        else lMenu += ["Unleash"];
+        // Unleash button
+        // Post button
 
+        // Check Authority Level
+        if(iAuth <= g_iLeashedToAuth)
+        {
+            lMenu += ["Unleash", "Post"];
+        }
     }else {
-        if(g_kLeashedTo) lMenu += ["Unleash"];
+        // Grab Leash
+        // Post
+
+        if(kID != llGetOwner()) lMenu += ["Grab Leash"];
+        lMenu += ["Post"];
     }
+
     list lHelper = [];
     string sText =  "Leash Menu";
 

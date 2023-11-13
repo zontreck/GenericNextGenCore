@@ -1,14 +1,6 @@
 #include "src/includes/common.lsl"
 
 
-
-
-string sSetor(integer test, string a, string b)
-{
-    if(test)return a;
-    return b;
-}
-
 default
 {
     state_entry()
