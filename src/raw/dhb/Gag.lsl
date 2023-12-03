@@ -53,12 +53,96 @@ integer g_iGagPrim;
 
 Main(key kID, integer iAuth)
 {
-    list lMenu = ["main..", Checkbox(g_iGagged, "Gag")];
+    list lMenu = ["main..", Checkbox(g_iGagged, "Gag"), " ", Checkbox((g_iGagLevel==0), "No Garble"), Checkbox((g_iGagLevel==1), "Loose"), Checkbox((g_iGagLevel == 2), "Medium"), Checkbox((g_iGagLevel==3), "Tight")];
     list lHelper = [];
     string sText =  "Gag Menu";
 
 
     Menu(kID, sText, lMenu, "menu~gag", SetDSMeta([iAuth]), lHelper);
+}
+
+string garble(string in) {
+
+    string input = in;
+
+    if(input == "." || input=="," || input == ":" || input == "?" || input ==";" || input == " " || input=="!" || input == ")" || input=="(" || input == "{" || input == "}" || input == "\\" || input == "/")input=input;
+    
+    if(input == "a" || input == "e" ) input="eh";
+    
+    if((input == "i" || input == "y") && g_iGagLevel >1)input="eh";
+    
+    if((input == "o" || input=="u") && g_iGagLevel > 1) input = "h";
+    
+    if(input == "c" || input == "k" || input=="q") input="k";
+    
+    if((input == "m" || input=="r") && g_iGagLevel > 1) input="w";
+    
+    if(input == "s" && g_iGagLevel>1) input="sh";
+    
+    if(input == "z")input="shh";  // or maybe silent.. 
+    
+    if(input == "b" || input == "p" || input == "v") input="f";
+    
+    if(input == "x")input = "ek";
+    
+    
+    
+    
+    if(input=="shh" && g_iGagLevel==3)input="";
+    
+    if(input == "ek" && g_iGagLevel == 3) input="eh";
+
+    return input;
+}
+
+string garbleString(string input)
+{
+    integer i=0;
+    string out;
+    integer len = llStringLength(input);
+    for(i = 0;i<len; i++)
+    {
+        out += garble(llGetSubString(input,i,i));
+    }
+
+    return out;
+}
+integer g_iChatChannel;
+integer g_iChatHandle;
+integer g_iEmoteChannel;
+integer g_iEmoteHandle;
+UpdateGag()
+{
+    if(g_iGagged)
+    {
+        llSetLinkAlpha(g_iGagPrim, 1.0, ALL_SIDES);
+    }else {
+        llSetLinkAlpha(g_iGagPrim, 0.0, ALL_SIDES);
+
+    }
+
+
+    llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+
+    if(g_iGagLevel > 0 && g_iGagged)
+    {
+        // Update Listeners
+        llListenRemove(g_iChatHandle);
+        llListenRemove(g_iEmoteHandle);
+        g_iChatChannel = llRound(llFrand(0xFFFFF));
+        g_iEmoteChannel = llRound(llFrand(0xFFFFF));
+
+        g_iChatHandle = llListen(g_iChatChannel, "", llGetOwner(), "");
+        g_iEmoteHandle = llListen(g_iEmoteChannel, "", llGetOwner(), "");
+
+        llOwnerSay("@redirchat:" + (string)g_iChatChannel +"=add,rediremote:"+(string)g_iEmoteChannel +"=add");
+
+    } else {
+        llOwnerSay("@redirchat:" + (string)g_iChatChannel +"=rem,rediremote:"+(string)g_iEmoteChannel +"=rem");
+        llOwnerSay("@clear=redirchat,clear=rediremote");
+        llListenRemove(g_iChatHandle);
+        llListenRemove(g_iEmoteHandle);
+    }
 }
 default
 {
@@ -81,6 +165,42 @@ default
         if(!iHasGag)
         {
             llOwnerSay(llGetScriptName()+" has been removed because the required prim could not be found. Please ensure a prim with the description of 'gag' is present.");
+        }
+    }
+
+    listen(integer c,string n,key i,string m)
+    {
+        string oldName = llGetObjectName();
+        llSetObjectName(llGetDisplayName(llGetOwner()));
+        if(c == g_iChatChannel)
+        {
+            llSay(0, garbleString(m));
+        }else if(c == g_iEmoteChannel)
+        {
+            list lEmote = llParseStringKeepNulls(m,["\""],[]);
+            integer x = 0;
+            integer e = llGetListLength(lEmote);
+
+            for(x=0;x<e;x+=2)
+            {
+                lEmote = llListReplaceList(lEmote, [garbleString(llList2String(lEmote,x+1))], x+1, x+1);
+            }
+            llSay(0, llDumpList2String(lEmote, "\""));
+        }
+
+        llSetObjectName(oldName);
+    }
+
+    run_time_permissions(integer perm)
+    {
+        if (perm & PERMISSION_TRIGGER_ANIMATION)
+        {
+            if(g_iGagged)
+            {
+                llStartAnimation("bento_open_mouth");
+            }else {
+                llStopAnimation("bento_open_mouth");
+            }
         }
     }
 
@@ -125,6 +245,8 @@ default
                     case "gag_gagged":
                     {
                         g_iGagged = (integer)sValue;
+                        
+                        
                         break;
                     }
                     case "gag_level":
@@ -133,6 +255,10 @@ default
                         break;
                     }
                 }
+
+
+                if(~llSubStringIndex(sSetting, "gag_"))
+                    UpdateGag();
             }
         }else if(n == LINK_MENU_CHANNEL)
         {
@@ -172,6 +298,37 @@ default
                                 iRespring=0;
                                 llMessageLinked(LINK_SET, 0, llList2Json(JSON_OBJECT, ["cmd", "pass_menu", "plugin", "Main"]), kAv);
                                 break;
+                            }
+                            case Checkbox(g_iGagged, "Gag"):
+                            {
+                                writeSetting("gag_gagged", (string)(!g_iGagged));
+                                break;
+                            }
+                            default :
+                            {
+                                string label = Uncheckbox(sReply);
+                                switch(label)
+                                {
+                                    case "No Garble":
+                                    {
+                                        g_iGagLevel = 0;
+                                        break;
+                                    }
+                                    case "Loose":{
+                                        g_iGagLevel = 1;
+                                        break;
+                                    }
+                                    case "Medium": {
+                                        g_iGagLevel = 2;
+                                        break;
+                                    }
+                                    case "Tight":{
+                                        g_iGagLevel = 3;
+                                        break;
+                                    }
+                                }
+
+                                llLinksetDataWriteProtected("gag_level", (string)g_iGagLevel, MASTER_CODE);
                             }
                         }
                         break;
