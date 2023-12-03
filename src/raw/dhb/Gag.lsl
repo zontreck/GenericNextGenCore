@@ -177,7 +177,7 @@ default
             llSay(0, garbleString(m));
         }else if(c == g_iEmoteChannel)
         {
-            list lEmote = llParseStringKeepNulls(m,["\""],[]);
+            list lEmote = llParseString2List(m,["\""],[]);
             integer x = 0;
             integer e = llGetListLength(lEmote);
 
